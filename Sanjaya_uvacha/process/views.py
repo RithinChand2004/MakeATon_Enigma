@@ -129,3 +129,72 @@ def uploadImg(request):
     return render(request, 'home.html')
 
 
+class ImageUploadView(APIView):
+    parser_classes = (FileUploadParser,)
+
+    def post(self, request, *args, **kwargs):
+        print(request.data)
+        file_serializer = ImageSerializer(data=request.data)
+        print(file_serializer)
+        if file_serializer.is_valid():
+            file_serializer.save()
+            return Response(file_serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(file_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+def findObjects(request):
+    service_options = sdk.VisionServiceOptions("https://dristi.cognitiveservices.azure.com/",
+                                               "ec8f8825967f482699df9b8080d3d826")
+
+    vision_source = sdk.VisionSource(
+        url="https://bumble.blob.core.windows.net/data/frame123.jpg")
+
+    analysis_options = sdk.ImageAnalysisOptions()
+
+    analysis_options.features = (
+        # sdk.ImageAnalysisFeature.CAPTION |
+        # sdk.ImageAnalysisFeature.DENSE_CAPTIONS |
+        sdk.ImageAnalysisFeature.OBJECTS 
+        # sdk.ImageAnalysisFeature.PEOPLE |
+        # sdk.ImageAnalysisFeature.TEXT |
+        # sdk.ImageAnalysisFeature.TAGS
+    )
+
+    analysis_options.language = "en"
+
+    analysis_options.gender_neutral_caption = True
+
+    image_analyzer = sdk.ImageAnalyzer(
+        service_options, vision_source, analysis_options)
+
+    result = image_analyzer.analyze()
+
+    if result.reason == sdk.ImageAnalysisResultReason.ANALYZED:
+
+        print(" Image height: {}".format(result.image_height))
+        print(" Image width: {}".format(result.image_width))
+        print(" Model version: {}".format(result.model_version))
+
+        obj = ''
+        if result.objects is not None:
+            print(" Objects:")
+            for object in result.objects:
+                print("   '{}', {}, Confidence: {:.4f}".format(
+                    object.name, object.bounding_box, object.confidence))
+                if object.confidence > 0.5:
+                    obj += object.name + ' '
+        else:
+            print("No objects detected.")
+        
+        speakOut(obj)
+        return JsonResponse({'objects': obj})
+
+        
+
+    else:
+
+        error_details = sdk.ImageAnalysisErrorDetails.from_result(result)
+        print(" Analysis failed.")
+        # print("   Error reason: {}".format(error_details.reason))
+        # print("   Error code: {}".format(error_details.error_code))
+        # print("   Error message: {}".format(error_details.message))
