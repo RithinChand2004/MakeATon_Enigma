@@ -457,3 +457,101 @@ def retriveCaption():
 
     if result.reason == sdk.ImageAnalysisResultReason.ANALYZED:
         return result
+def fifs(request):
+    image_url = "https://bumble.blob.core.windows.net/data/frame123.jpg"
+    try:
+        # Fetch the image from the URL
+        response = requests.get(image_url)
+        if response.status_code != 200:
+            return None
+
+        # Read the image from the response
+        image_data = BytesIO(response.content)
+        img = cv2.imdecode(np.frombuffer(image_data.read(), np.uint8), -1)
+        x, y, c = img.shape
+        # cv2.imshow('img', img)
+        # cv2.waitKey(0)
+
+        # Perform hand and finger detection here using OpenCV
+
+        # Example: Convert the image to grayscale
+        frame = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+
+        # Example: Apply hand and finger detection algorithms
+        # You would need to implement or use existing algorithms for hand and finger detection
+        # This may involve techniques like contour detection, skin color detection, and finger tracking
+
+        # use mediapipe to detect hand
+        mpHands = mp.solutions.hands  # mpHands is the object which holds the data
+        hands = mpHands.Hands(
+            max_num_hands=1, min_detection_confidence=0.7)
+        mpDraw = mp.solutions.drawing_utils  # draws the hand moveme
+        textsToBeRead = []
+
+        results = hands.process(frame)
+        res = retriveCaption()
+        if results.multi_hand_landmarks:
+            print("Hand detected")
+            landmarks = []
+            for handslms in results.multi_hand_landmarks:
+                for lm in handslms.landmark:
+                    # print(id, lm)
+                    lmx = int(lm.x * x)
+                    lmy = int(lm.y * y)
+
+                    landmarks.append([lmx, lmy])
+
+                mpDraw.draw_landmarks(frame, handslms, mpHands.HAND_CONNECTIONS,
+                                      mpDraw.DrawingSpec(
+                                        color=(0, 0, 255), thickness=2, circle_radius=2),
+                                      mpDraw.DrawingSpec(
+                                        color=(0, 255, 0), thickness=2, circle_radius=2),
+                                      )
+            position = (landmarks[8])
+            print(position)
+            bounds = []
+            if res.dense_captions is not None:
+                print(" Dense Captions:")
+                for caption in res.dense_captions:
+                    # print("   '{}', {}, Confidence: {:.4f}".format(
+                    #     caption.content, caption.bounding_box, caption.confidence))
+                    # print(caption.bounding_box.x)
+                    # print(caption.bounding_box.y)
+                    # print(caption.bounding_box.w)
+                    # print(caption.bounding_box.h)
+                    # print()
+                    # textsToBeRead.append(caption.content)
+                    if isInsideBox(position, caption.bounding_box.x, caption.bounding_box.y, caption.bounding_box.w, caption.bounding_box.h):
+                        print("Inside box")
+                        print(caption.content)
+                        textsToBeRead.append(caption.content)
+                        bounds.append(caption.bounding_box)
+                print(textsToBeRead)
+                temp = ' '.join(textsToBeRead)
+                speakOut("Hand detected "+temp)
+                return JsonResponse({'caption': temp})
+            else:
+                print("No dense captions detected")
+                if res.caption is not None:
+                    print(" Caption:")
+                    print(res.caption.content)
+                    speakOut(res.caption.content)
+                    return JsonResponse({'caption': res.caption.content})
+
+        else:
+            print("No hand detected")
+            if res.caption is not None:
+                print(" Caption:")
+                print(res.caption.content)
+                speakOut(res.caption.content)
+
+                return JsonResponse({'caption': res.caption.content})
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return None
+
+
+# Example usage:
+# Replace with the image URL you want to process
