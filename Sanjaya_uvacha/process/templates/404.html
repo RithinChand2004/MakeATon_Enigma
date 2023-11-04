@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 Not Found</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/5.0.0-alpha1/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .error-container {
+            text-align: center;
+            margin-top: 20%;
+        }
+
+        .error-code {
+            font-size: 8rem;
+            font-weight: bold;
+            color: #e74c3c;
+        }
+
+        .error-message {
+            font-size: 2rem;
+            color: #333;
+        }
+
+        .error-image {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .go-back-button {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container error-container">
+        <div class="error-code">404</div>
+        <div class="error-message">Oops! Page Not Found</div>
+        {% comment %} <img src="https://via.placeholder.com/600x400" alt="Page Not Found" class="error-image"> {% endcomment %}
+        <div class="go-back-button">
+            <a href="/" class="btn btn-primary">Go Back to Home</a>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/5.0.0-alpha1/js/bootstrap.min.js"></script>
+</body>
+</html>
